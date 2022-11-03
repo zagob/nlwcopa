@@ -1,4 +1,5 @@
 import { GetServerSideProps, GetStaticProps } from "next";
+import { signIn, useSession } from "next-auth/react";
 import Image from "next/image";
 import { FormEvent, useState } from "react";
 import nlwPreview from "../assets/app-nlw-copa-preview.png";
@@ -15,7 +16,10 @@ interface HomeProps {
 }
 
 export default function Home({ guessCount, poolCount, userCount }: HomeProps) {
+  const { data: session, status } = useSession();
   const [poolTitle, setPoolTitle] = useState("");
+
+  console.log("d", session);
 
   async function handleCreatePool(event: FormEvent) {
     event.preventDefault();
@@ -74,6 +78,9 @@ export default function Home({ guessCount, poolCount, userCount }: HomeProps) {
           >
             Criar meu bolão
           </button>
+          <button type="button" onClick={() => signIn()}>
+            Login com Google
+          </button>
         </form>
         <p className="mt-4 text-sm text-gray-300 leading-relaxed">
           Após criar seu bolão, você receberá um código único que poderá usar
@@ -97,18 +104,17 @@ export default function Home({ guessCount, poolCount, userCount }: HomeProps) {
 }
 
 export const getStaticProps: GetStaticProps = async () => {
-  const [poolCountResponse, guessCountResponse, userCountResponse] =
-    await Promise.all([
-      api.get("/pools/count"),
-      api.get("/guesses/count"),
-      api.get("/users/count"),
-    ]);
+  const [poolCountResponse, guessCountResponse] = await Promise.all([
+    api.get("/pools/count"),
+    api.get("/guesses/count"),
+    // api.get("/users/count"),
+  ]);
 
   return {
     props: {
       poolCount: poolCountResponse.data.count,
       guessCount: guessCountResponse.data.count,
-      userCount: userCountResponse.data.count,
+      userCount: 1,
     },
     revalidate: 60,
   };
