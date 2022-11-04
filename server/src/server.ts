@@ -19,7 +19,7 @@ async function bootstrap() {
   });
 
   await fastify.register(jwt, {
-    secret: "a59ce5803b705c2a763fc2202b2a8e88fd75d7bc9c2fd5cf86f9ea1e30c91ac6",
+    secret: process.env.KEY_SECRET_JWT!,
   });
 
   await fastify.register(pollRoutes);
