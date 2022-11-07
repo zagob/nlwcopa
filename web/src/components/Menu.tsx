@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Polls } from "./Polls";
 
 interface ButtonNavigationProps {
   active: string;
@@ -45,6 +46,8 @@ export function Menu() {
           onActiveTabNavigation={(title) => setNameActiveTabNavigation(title)}
         />
       </ul>
+
+      {nameActiveTabNavigation === "Meus Bolões" && <Polls />}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { GetServerSideProps, GetStaticProps } from "next";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { getSession, signIn, signOut, useSession } from "next-auth/react";
 import Image from "next/image";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import nlwPreview from "../assets/app-nlw-copa-preview.png";
 import logoImg from "../assets/logo.svg";
 import userAvatarImg from "../assets/users-avatar-example.png";
@@ -10,6 +10,7 @@ import { ShowUtilities } from "../components/ShowUtilities";
 import { api } from "../services/axios";
 import { GoogleLogo, Power } from "phosphor-react";
 import { Menu } from "../components/Menu";
+import { useAuth } from "../hooks/useAuth";
 
 interface HomeProps {
   poolCount: number;
@@ -18,12 +19,9 @@ interface HomeProps {
 }
 
 export default function Home({ guessCount, poolCount, userCount }: HomeProps) {
+  const { handleSignInWithGoogle, handleSignOut } = useAuth();
   const { data: session, status } = useSession();
   const [poolTitle, setPoolTitle] = useState("");
-
-  console.log("authenticate", status === "authenticated");
-  console.log("d", session);
-  console.log(!!session?.user);
 
   async function handleCreatePool(event: FormEvent) {
     event.preventDefault();
@@ -87,7 +85,7 @@ export default function Home({ guessCount, poolCount, userCount }: HomeProps) {
         ) : (
           <button
             type="button"
-            onClick={() => signIn()}
+            onClick={() => handleSignInWithGoogle()}
             className="text-gray-100 mt-10 font-bold rounded px-6 py-3 bg-red-500 hover:bg-red-400 transition-all flex items-center gap-2"
           >
             <GoogleLogo size={28} weight="bold" />
@@ -108,26 +106,31 @@ export default function Home({ guessCount, poolCount, userCount }: HomeProps) {
       </main>
 
       <div className="h-full py-14 flex flex-col gap-4">
-        {/* <Image
-          src={nlwPreview}
-          className={`${!!session?.user ? "opacity-20" : ""}`}
-          quality={100}
-          alt="Dois celulares exibindo uma pŕevida da aplicação"
-        /> */}
-        <div className="flex justify-between items-center">
-          <h3 className="text-gray-200 flex items-center gap-2 text-lg">
-            Bem vindo(a){" "}
-            <strong className="text-md ">{session?.user?.name}</strong>
-          </h3>
-          <div
-            className="flex items-center gap-2 hover:opacity-60 transition-all hover:cursor-pointer"
-            onClick={() => signOut()}
-          >
-            <Power size={28} className="text-gray-200" />
-            <span className="text-gray-200">Deslogar</span>
-          </div>
-        </div>
-        <Menu />
+        {status === "unauthenticated" && (
+          <Image
+            src={nlwPreview}
+            quality={100}
+            alt="Dois celulares exibindo uma pŕevida da aplicação"
+          />
+        )}
+        {status === "authenticated" && (
+          <>
+            <div className="flex justify-between items-center">
+              <h3 className="text-gray-200 flex items-center gap-2 text-lg">
+                Bem vindo(a)
+                <strong className="text-md ">{session?.user?.name}</strong>
+              </h3>
+              <div
+                className="flex items-center gap-2 hover:opacity-60 transition-all hover:cursor-pointer"
+                onClick={handleSignOut}
+              >
+                <Power size={28} className="text-gray-200" />
+                <span className="text-gray-200">Deslogar</span>
+              </div>
+            </div>
+            <Menu />
+          </>
+        )}
       </div>
     </div>
   );

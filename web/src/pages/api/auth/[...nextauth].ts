@@ -1,5 +1,6 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
+import NextAuth, { NextAuthOptions, Session } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import { api } from "../../../services/axios";
 
 const GOOGLE_AUTHORIZATION_URL =
   "https://accounts.google.com/o/oauth2/v2/auth?" +
@@ -18,25 +19,31 @@ export const authOptions: NextAuthOptions = {
       authorization: GOOGLE_AUTHORIZATION_URL,
     }),
   ],
+  secret: "teste",
   session: {
     strategy: "jwt",
   },
 
   callbacks: {
     async jwt({ token, user, account, profile, isNewUser }) {
-      // if (account?.accesssToken) {
-      //   token.accesssToken = account.accesssToken;
-      // }
       if (account && user) {
         return {
+          ...token,
           token: account.access_token,
         };
       }
 
       return token;
     },
-    async session({ session, token }) {
-      session.access_token = token;
+    async session({ session, token, user }) {
+      const { data: resToken } = await api.post("/users", {
+        access_token: token.token,
+      });
+
+      api.defaults.headers.common["Authorization"] = `Bearer ${resToken.token}`;
+
+      session.accessToken = token.token;
+      session.accessTokenAPI = resToken.token;
 
       return session;
     },
