@@ -1,7 +1,7 @@
 import { GetServerSideProps, GetStaticProps } from "next";
 import { getSession, signIn, signOut, useSession } from "next-auth/react";
 import Image from "next/image";
-import { FormEvent, useEffect, useState } from "react";
+import { Toaster, toast } from "react-hot-toast";
 import nlwPreview from "../assets/app-nlw-copa-preview.png";
 import logoImg from "../assets/logo.svg";
 import userAvatarImg from "../assets/users-avatar-example.png";
@@ -11,6 +11,7 @@ import { api } from "../services/axios";
 import { GoogleLogo, Power } from "phosphor-react";
 import { Menu } from "../components/Menu";
 import { useAuth } from "../hooks/useAuth";
+import { usePool } from "../hooks/usePool";
 
 interface HomeProps {
   poolCount: number;
@@ -20,33 +21,12 @@ interface HomeProps {
 
 export default function Home({ guessCount, poolCount, userCount }: HomeProps) {
   const { handleSignInWithGoogle, handleSignOut } = useAuth();
+  const { handleCreatePool, poolTitle, changePoolTitle } = usePool();
   const { data: session, status } = useSession();
-  const [poolTitle, setPoolTitle] = useState("");
-
-  async function handleCreatePool(event: FormEvent) {
-    event.preventDefault();
-
-    try {
-      const response = await api.post("/pools", {
-        title: poolTitle,
-      });
-
-      const { code } = response.data;
-
-      navigator.clipboard.writeText(code);
-
-      alert(
-        "Bolão criado com sucesso, o código foi copiado para a área de transferência"
-      );
-      setPoolTitle("");
-    } catch (err) {
-      console.log(err);
-      alert("Falha ao criar o bolão, tente novamente!");
-    }
-  }
 
   return (
     <div className="max-w-[1124px] h-screen mx-auto grid grid-cols-2 items-center gap-28">
+      <Toaster />
       <main>
         <Image src={logoImg} quality={100} alt="NLW Copa" />
 
@@ -71,7 +51,7 @@ export default function Home({ guessCount, poolCount, userCount }: HomeProps) {
               type="text"
               required
               placeholder="Qual nome do seu bolão?"
-              onChange={(event) => setPoolTitle(event.target.value)}
+              onChange={(event) => changePoolTitle(event.target.value)}
               value={poolTitle}
               className="flex-1 px-6 py-4 rounded text-gray-100 bg-gray-800 border border-gray-600 text-sm"
             />

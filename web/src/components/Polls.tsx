@@ -1,43 +1,9 @@
 import { Check, Copy } from "phosphor-react";
-import { useEffect, useState } from "react";
-import { useAuth } from "../hooks/useAuth";
-import { api } from "../services/axios";
-
-interface PollsProps {
-  id: string;
-  title: string;
-  code: string;
-}
-
-interface CopyCodeProps {
-  isCopy: boolean;
-  code: string;
-}
+import { usePool } from "../hooks/usePool";
 
 export function Polls() {
-  const { session } = useAuth();
-  const [CopyCode, setCopyCode] = useState({} as CopyCodeProps);
-  const [polls, setPolls] = useState<PollsProps[]>([]);
+  const { polls, CopyCode, handleClipboardCopy } = usePool();
 
-  async function handleClipboardCopy(code: string) {
-    navigator.clipboard.writeText(code);
-    setCopyCode({ code, isCopy: true });
-    setTimeout(() => {
-      setCopyCode({ code: "", isCopy: false });
-    }, 2000);
-  }
-
-  async function fetchPolls() {
-    const { data: responsePolls } = await api.get("/polls");
-    setPolls(responsePolls.polls);
-  }
-
-  useEffect(() => {
-    if (session) {
-      console.log("session", session);
-      fetchPolls();
-    }
-  }, []);
   return (
     <section className="min-h-[600px] overflow-y-auto">
       {polls.map((poll) => (

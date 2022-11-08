@@ -3,7 +3,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { api } from "../../../services/axios";
 
 const GOOGLE_AUTHORIZATION_URL =
-  "https://accounts.google.com/o/oauth2/v2/auth?" +
+  `${process.env.NEXT_PUBLIC_GOOGLE_URL}` +
   new URLSearchParams({
     prompt: "consent",
     access_type: "offline",
@@ -13,13 +13,12 @@ const GOOGLE_AUTHORIZATION_URL =
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
-      clientId:
-        "622041248557-gn59rmkfnil5t855rpp42cdeknklhuh0.apps.googleusercontent.com",
-      clientSecret: "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",
+      clientId: `${process.env.NEXT_PUBLIC_CLIENT_ID}`,
+      clientSecret: `${process.env.NEXT_PUBLIC_CLIENT_SECRET}`,
       authorization: GOOGLE_AUTHORIZATION_URL,
     }),
   ],
-  secret: "teste",
+  secret: process.env.NEXT_PUBLIC_SECRET,
   session: {
     strategy: "jwt",
   },
@@ -36,15 +35,18 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token, user }) {
-      const { data: resToken } = await api.post("/users", {
-        access_token: token.token,
-      });
+      if (session && token) {
+        const { data: resToken } = await api.post("/users", {
+          access_token: token.token,
+        });
 
-      api.defaults.headers.common["Authorization"] = `Bearer ${resToken.token}`;
+        api.defaults.headers.common[
+          "Authorization"
+        ] = `Bearer ${resToken.token}`;
 
-      session.accessToken = token.token;
-      session.accessTokenAPI = resToken.token;
-
+        // session.accessToken = token.token;
+        session.accessTokenAPI = resToken.token;
+      }
       return session;
     },
   },
